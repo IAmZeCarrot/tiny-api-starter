@@ -1,6 +1,6 @@
-import Database from 'better-sqlite3';
-import { mkdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import Database from "better-sqlite3";
+import { mkdirSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 
 const migrations = [
   {
@@ -27,21 +27,21 @@ const migrations = [
 export type SqliteDatabase = Database.Database;
 
 export function openDatabase(path: string): SqliteDatabase {
-  if (path !== ':memory:')
+  if (path !== ":memory:")
     mkdirSync(dirname(resolve(path)), { recursive: true });
   const database = new Database(path);
-  database.pragma('journal_mode = WAL');
-  database.pragma('foreign_keys = ON');
+  database.pragma("journal_mode = WAL");
+  database.pragma("foreign_keys = ON");
   migrate(database);
   return database;
 }
 
 export function migrate(database: SqliteDatabase): void {
   database.exec(
-    'CREATE TABLE IF NOT EXISTS migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)',
+    "CREATE TABLE IF NOT EXISTS migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)",
   );
   const applied = database
-    .prepare('SELECT version FROM migrations')
+    .prepare("SELECT version FROM migrations")
     .all()
     .map((row) => (row as { version: number }).version);
   for (const migration of migrations) {
@@ -49,7 +49,7 @@ export function migrate(database: SqliteDatabase): void {
     database.transaction(() => {
       database.exec(migration.sql);
       database
-        .prepare('INSERT INTO migrations (version, applied_at) VALUES (?, ?)')
+        .prepare("INSERT INTO migrations (version, applied_at) VALUES (?, ?)")
         .run(migration.version, new Date().toISOString());
     })();
   }

@@ -1,15 +1,15 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-export const statusSchema = z.enum(['todo', 'in_progress', 'done']);
-export const prioritySchema = z.enum(['low', 'medium', 'high']);
+export const statusSchema = z.enum(["todo", "in_progress", "done"]);
+export const prioritySchema = z.enum(["low", "medium", "high"]);
 const dateSchema = z.iso.date();
 
 export const createTaskSchema = z
   .object({
     title: z.string().trim().min(1).max(200),
     description: z.string().trim().max(5_000).nullable().optional(),
-    status: statusSchema.default('todo'),
-    priority: prioritySchema.default('medium'),
+    status: statusSchema.default("todo"),
+    priority: prioritySchema.default("medium"),
     dueDate: dateSchema.nullable().optional(),
     tags: z
       .array(z.string().trim().min(1).max(40))
@@ -35,7 +35,7 @@ export const updateTaskSchema = z
   .strict()
   .refine(
     (value) => Object.keys(value).length > 0,
-    'At least one field is required',
+    "At least one field is required",
   );
 
 export const listTasksSchema = z
@@ -46,9 +46,9 @@ export const listTasksSchema = z
     q: z.string().trim().min(1).max(200).optional(),
     dueBefore: dateSchema.optional(),
     sort: z
-      .enum(['createdAt', 'updatedAt', 'dueDate', 'title'])
-      .default('createdAt'),
-    order: z.enum(['asc', 'desc']).default('desc'),
+      .enum(["createdAt", "updatedAt", "dueDate", "title"])
+      .default("createdAt"),
+    order: z.enum(["asc", "desc"]).default("desc"),
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(20),
   })

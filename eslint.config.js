@@ -1,8 +1,8 @@
-import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
+import js from "@eslint/js";
+import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ['dist/', 'coverage/', 'data/', 'eslint.config.js'] },
+  { ignores: ["dist/", "coverage/", "data/", "eslint.config.js"] },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   {
@@ -13,12 +13,12 @@ export default tseslint.config(
       },
     },
     rules: {
-      '@typescript-eslint/consistent-type-imports': 'error',
-      '@typescript-eslint/no-misused-promises': [
-        'error',
+      "@typescript-eslint/consistent-type-imports": "error",
+      "@typescript-eslint/no-misused-promises": [
+        "error",
         { checksVoidReturn: false },
       ],
-      '@typescript-eslint/require-await': 'off',
+      "@typescript-eslint/require-await": "off",
     },
   },
 );

@@ -1,6 +1,6 @@
-import type { SqliteDatabase } from './database.js';
+import type { SqliteDatabase } from "./database.js";
 
-declare module 'fastify' {
+declare module "fastify" {
   interface FastifyInstance {
     database: SqliteDatabase;
   }

@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { migrate, openDatabase } from '../src/database.js';
+import { describe, expect, it } from "vitest";
+import { migrate, openDatabase } from "../src/database.js";
 
-describe('migrations', () => {
-  it('are idempotent and create the tasks table', () => {
-    const database = openDatabase(':memory:');
+describe("migrations", () => {
+  it("are idempotent and create the tasks table", () => {
+    const database = openDatabase(":memory:");
     migrate(database);
     expect(
       database
@@ -14,7 +14,7 @@ describe('migrations', () => {
     ).toBeTruthy();
     expect(
       (
-        database.prepare('SELECT COUNT(*) AS count FROM migrations').get() as {
+        database.prepare("SELECT COUNT(*) AS count FROM migrations").get() as {
           count: number;
         }
       ).count,
