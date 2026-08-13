@@ -69,3 +69,119 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
 }
+
+const nullableString = { anyOf: [{ type: "string" }, { type: "null" }] };
+const nullableDate = {
+  anyOf: [{ type: "string", format: "date" }, { type: "null" }],
+};
+
+export const taskJsonSchema = {
+  type: "object",
+  required: [
+    "id",
+    "title",
+    "description",
+    "status",
+    "priority",
+    "dueDate",
+    "tags",
+    "createdAt",
+    "updatedAt",
+  ],
+  properties: {
+    id: { type: "integer", minimum: 1, example: 1 },
+    title: { type: "string", example: "Ship the API" },
+    description: { ...nullableString, example: "Publish version 1.0" },
+    status: { type: "string", enum: statusSchema.options, example: "todo" },
+    priority: {
+      type: "string",
+      enum: prioritySchema.options,
+      example: "high",
+    },
+    dueDate: { ...nullableDate, example: "2026-09-01" },
+    tags: {
+      type: "array",
+      items: { type: "string" },
+      example: ["release"],
+    },
+    createdAt: { type: "string", format: "date-time" },
+    updatedAt: { type: "string", format: "date-time" },
+  },
+} as const;
+
+export const createTaskJsonSchema = {
+  type: "object",
+  required: ["title"],
+  additionalProperties: false,
+  properties: {
+    title: {
+      type: "string",
+      minLength: 1,
+      maxLength: 200,
+      example: "Ship the API",
+    },
+    description: {
+      anyOf: [{ type: "string", maxLength: 5_000 }, { type: "null" }],
+      example: "Publish version 1.0",
+    },
+    status: { type: "string", enum: statusSchema.options, default: "todo" },
+    priority: {
+      type: "string",
+      enum: prioritySchema.options,
+      default: "medium",
+    },
+    dueDate: { ...nullableDate, example: "2026-09-01" },
+    tags: {
+      type: "array",
+      maxItems: 20,
+      items: { type: "string", minLength: 1, maxLength: 40 },
+      example: ["release"],
+    },
+  },
+} as const;
+
+export const updateTaskJsonSchema = {
+  type: "object",
+  required: [],
+  minProperties: 1,
+  additionalProperties: false,
+  properties: {
+    title: { type: "string", minLength: 1, maxLength: 200 },
+    description: {
+      anyOf: [{ type: "string", maxLength: 5_000 }, { type: "null" }],
+    },
+    status: { type: "string", enum: statusSchema.options },
+    priority: { type: "string", enum: prioritySchema.options },
+    dueDate: nullableDate,
+    tags: {
+      type: "array",
+      maxItems: 20,
+      items: { type: "string", minLength: 1, maxLength: 40 },
+    },
+  },
+} as const;
+
+export const listTasksJsonSchema = {
+  type: "object",
+  properties: {
+    status: { type: "string", enum: statusSchema.options },
+    priority: { type: "string", enum: prioritySchema.options },
+    tag: { type: "string", minLength: 1, maxLength: 40 },
+    q: { type: "string", minLength: 1, maxLength: 200 },
+    dueBefore: { type: "string", format: "date" },
+    sort: {
+      type: "string",
+      enum: ["createdAt", "updatedAt", "dueDate", "title"],
+      default: "createdAt",
+    },
+    order: { type: "string", enum: ["asc", "desc"], default: "desc" },
+    page: { type: "integer", minimum: 1, default: 1 },
+    limit: { type: "integer", minimum: 1, maximum: 100, default: 20 },
+  },
+} as const;
+
+export const taskIdJsonSchema = {
+  type: "object",
+  required: ["id"],
+  properties: { id: { type: "integer", minimum: 1 } },
+} as const;

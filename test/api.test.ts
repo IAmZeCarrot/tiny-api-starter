@@ -21,7 +21,15 @@ describe("tasks API", () => {
   });
   afterEach(async () => app.close());
 
-  it("reports health and exposes OpenAPI", async () => {
+  it("links to interactive docs and exposes a useful OpenAPI document", async () => {
+    expect(
+      (await app.inject({ method: "GET", url: "/" })).json(),
+    ).toMatchObject({
+      name: "Tiny API Starter",
+      health: "/health",
+      docs: "/docs",
+      openapi: "/openapi.json",
+    });
     expect(
       (await app.inject({ method: "GET", url: "/health" })).json(),
     ).toEqual({ status: "ok" });
@@ -30,9 +38,49 @@ describe("tasks API", () => {
       url: "/openapi.json",
     });
     expect(docs.statusCode).toBe(200);
-    expect(parse<{ info: { title: string } }>(docs.body).info.title).toBe(
-      "Tiny API Starter",
+    const document = parse<{
+      info: { title: string };
+      paths: Record<string, Record<string, { requestBody?: unknown }>>;
+    }>(docs.body);
+    expect(document.info.title).toBe("Tiny API Starter");
+    const collectionPath =
+      document.paths["/v1/tasks"] ?? document.paths["/v1/tasks/"];
+    expect(collectionPath?.post?.requestBody).toBeDefined();
+    const itemPath =
+      document.paths["/v1/tasks/{id}"] ?? document.paths["/v1/tasks/{id}/"];
+    expect(itemPath?.patch?.requestBody).toBeDefined();
+
+    const ui = await app.inject({ method: "GET", url: "/docs/" });
+    expect(ui.statusCode).toBe(200);
+    expect(ui.headers["content-type"]).toContain("text/html");
+    expect(ui.body).toContain("Swagger UI");
+  });
+
+  it("can disable documentation routes for deployment", async () => {
+    const privateApp = await buildApp(
+      {
+        host: "127.0.0.1",
+        port: 3000,
+        databasePath: ":memory:",
+        logLevel: "silent",
+        docsEnabled: false,
+      },
+      { logger: false },
     );
+    try {
+      expect(
+        (await privateApp.inject({ method: "GET", url: "/" })).json(),
+      ).toMatchObject({ docs: null, openapi: null });
+      expect(
+        (await privateApp.inject({ method: "GET", url: "/docs/" })).statusCode,
+      ).toBe(404);
+      expect(
+        (await privateApp.inject({ method: "GET", url: "/openapi.json" }))
+          .statusCode,
+      ).toBe(404);
+    } finally {
+      await privateApp.close();
+    }
   });
 
   it("supports the full CRUD lifecycle", async () => {
