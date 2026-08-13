@@ -7,6 +7,10 @@ const environmentSchema = z.object({
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),
+  DOCS_ENABLED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((value) => value === "true"),
 });
 
 export type AppConfig = {
@@ -14,6 +18,7 @@ export type AppConfig = {
   port: number;
   databasePath: string;
   logLevel: string;
+  docsEnabled?: boolean;
 };
 
 export function loadConfig(
@@ -29,5 +34,6 @@ export function loadConfig(
     port: result.data.PORT,
     databasePath: result.data.DATABASE_PATH,
     logLevel: result.data.LOG_LEVEL,
+    docsEnabled: result.data.DOCS_ENABLED,
   };
 }
