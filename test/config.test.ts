@@ -8,7 +8,10 @@ describe("loadConfig", () => {
       port: 3000,
       databasePath: "./data/tiny-api.sqlite",
       logLevel: "info",
+      docsEnabled: true,
     }));
+  it("can disable interactive documentation", () =>
+    expect(loadConfig({ DOCS_ENABLED: "false" }).docsEnabled).toBe(false));
   it("rejects an invalid port", () =>
     expect(() => loadConfig({ PORT: "70000" })).toThrow(
       "Invalid environment configuration",
