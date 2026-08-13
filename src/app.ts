@@ -1,11 +1,23 @@
 import helmet from "@fastify/helmet";
 import swagger from "@fastify/swagger";
+import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyInstance } from "fastify";
 import { ZodError } from "zod";
 import type { AppConfig } from "./config.js";
 import { openDatabase } from "./database.js";
 import { HttpError } from "./errors.js";
 import { taskRoutes } from "./tasks/routes.js";
+
+function isFastifyValidationError(
+  error: unknown,
+): error is { validation: unknown[] } {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "validation" in error &&
+    Array.isArray(error.validation)
+  );
+}
 
 export async function buildApp(
   config: AppConfig,
@@ -15,6 +27,11 @@ export async function buildApp(
     logger: options.logger ?? { level: config.logLevel },
     bodyLimit: 1_048_576,
     requestIdHeader: "x-request-id",
+    ajv: {
+      customOptions: {
+        keywords: ["example"],
+      },
+    },
   });
   const database = openDatabase(config.databasePath);
   app.decorate("database", database);
@@ -31,11 +48,28 @@ export async function buildApp(
       tags: [{ name: "system" }, { name: "tasks" }],
     },
   });
-  app.get(
-    "/openapi.json",
-    { schema: { hide: true } },
-    async (_request, reply) => reply.send(app.swagger()),
-  );
+  if (config.docsEnabled !== false) {
+    await app.register(swaggerUi, {
+      routePrefix: "/docs",
+      uiConfig: {
+        deepLinking: true,
+        displayRequestDuration: true,
+        tryItOutEnabled: true,
+      },
+      staticCSP: true,
+    });
+    app.get(
+      "/openapi.json",
+      { schema: { hide: true } },
+      async (_request, reply) => reply.send(app.swagger()),
+    );
+  }
+  app.get("/", { schema: { hide: true } }, async () => ({
+    name: "Tiny API Starter",
+    health: "/health",
+    docs: config.docsEnabled === false ? null : "/docs",
+    openapi: config.docsEnabled === false ? null : "/openapi.json",
+  }));
   app.get(
     "/health",
     { schema: { tags: ["system"], summary: "Readiness check" } },
@@ -51,6 +85,14 @@ export async function buildApp(
     }),
   );
   app.setErrorHandler((error, request, reply) => {
+    if (isFastifyValidationError(error))
+      return reply.code(400).send({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Request validation failed",
+          requestId: request.id,
+        },
+      });
     if (error instanceof ZodError)
       return reply.code(400).send({
         error: {
