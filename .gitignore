@@ -53,6 +53,14 @@ web_modules/
 # Optional eslint cache
 .eslintcache
 
+# Tiny API local state
+.env
+.env.*
+!.env.example
+data/
+coverage/
+dist/
+
 # Optional stylelint cache
 .stylelintcache
 
