@@ -7,7 +7,7 @@ A compact, production-minded REST API starter built with Node.js, TypeScript, Fa
 - Local SQLite persistence with ordered, transactional migrations
 - CRUD, filtering, search, sorting, and bounded pagination
 - Strict Zod validation at the HTTP boundary
-- OpenAPI JSON generated from the running application
+- Interactive Swagger UI and OpenAPI JSON generated from the running application
 - Security headers, request IDs, size limits, graceful shutdown, and safe network defaults
 - Unit and integration tests with enforced coverage thresholds
 - ESLint, Prettier, strict TypeScript, and GitHub Actions CI
@@ -27,7 +27,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Request `http://127.0.0.1:3000/openapi.json` for the OpenAPI document. Import it into Swagger Editor, Insomnia, Postman, or another OpenAPI client for interactive exploration.
+Open `http://127.0.0.1:3000/docs` in a browser. Swagger UI shows every operation and lets you create, list, edit, and delete tasks with **Try it out**. The same generated specification is available at `http://127.0.0.1:3000/openapi.json` for Insomnia, Postman, code generators, and other OpenAPI tools.
 
 Create and list tasks:
 
@@ -44,6 +44,8 @@ curl 'http://127.0.0.1:3000/v1/tasks?status=todo&priority=high&page=1&limit=20'
 | Method   | Path            | Purpose                                        |
 | -------- | --------------- | ---------------------------------------------- |
 | `GET`    | `/health`       | Readiness check                                |
+| `GET`    | `/docs`         | Interactive Swagger UI                         |
+| `GET`    | `/openapi.json` | Generated OpenAPI document                     |
 | `GET`    | `/v1/tasks`     | List, filter, search, sort, and paginate tasks |
 | `POST`   | `/v1/tasks`     | Create a task                                  |
 | `GET`    | `/v1/tasks/:id` | Fetch one task                                 |
@@ -85,8 +87,11 @@ Clients can supply `x-request-id`; otherwise the server creates one.
 | `PORT`          | `3000`                   | TCP port, validated from 1 to 65535.                          |
 | `DATABASE_PATH` | `./data/tiny-api.sqlite` | SQLite file. Parent directories are created.                  |
 | `LOG_LEVEL`     | `info`                   | Pino log level, including `silent` for tests.                 |
+| `DOCS_ENABLED`  | `true`                   | Serve `/docs` and `/openapi.json`; accepts `true` or `false`. |
 
 `.env` and database files are ignored. Do not store production credentials in repository files.
+
+The documentation interface can execute real requests against the running server. Set `DOCS_ENABLED=false` where public API exploration is inappropriate, or protect the service at your gateway. Disabling it removes both `/docs` and `/openapi.json`; the API itself continues to operate.
 
 ## Database and migrations
 
@@ -131,7 +136,7 @@ test/                     unit and HTTP integration tests
 
 This is a starter, not a complete platform. Before exposing it publicly, choose authentication and authorization for your domain, configure trusted proxies and CORS if needed, add rate limiting at the edge or application layer, define backup and restore procedures, and instrument it for your environment.
 
-SQLite is an excellent fit for a small service or single-node deployment, but not a drop-in replacement for a multi-node database. Search uses SQLite `LIKE`, not full-text search. Pagination is offset-based and best suited to modest datasets. OpenAPI route summaries are included, while schemas remain intentionally lightweight so the validation model has one source of truth.
+SQLite is an excellent fit for a small service or single-node deployment, but not a drop-in replacement for a multi-node database. Search uses SQLite `LIKE`, not full-text search. Pagination is offset-based and best suited to modest datasets. The Zod validation and matching Fastify/OpenAPI schemas are kept beside each other; update both whenever the resource contract changes.
 
 ## License
 
